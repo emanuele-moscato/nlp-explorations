@@ -41,6 +41,18 @@ def positional_encoding(length, depth):
 
 class PositionalEmbedding(Layer):
     """
+    Layer sublcass performing word embedding, including positional encoding.
+    Sequence of operations, schematically:
+        1. A Keras `Embedding` layer computes a higher-dimensional embedding
+           for the vectorized text. The input tensor to the layer has shape
+           (n_sentences, max_length) and since the layer computes an embedding
+           for each token the output has shape (n_sentences, max_length,
+           dModel), where `dModel` is the dimension of the model, i.e. the
+           dimension of each token's representation (embedding).
+        2. The positional encoding of each token is computed. This has the same
+           shape as the output of the embedding layer.
+        3. The embedding and the positional encoding are added up to integrate
+           the information they carry.
     """
     def __init__(self, vocabSize, dModel, maximumPositionEncoding, **kwargs):
         """

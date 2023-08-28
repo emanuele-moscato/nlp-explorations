@@ -85,9 +85,22 @@ class Transformer(Model):
         # Note: we use one-hot encoding, so the last layer should output a
         #       number of logits for each sample equal to the size of the
         #       target vocabulary.
+
+        # Original line. This is ok for training because the loss has the
+        # `from_logits=True` option, but what about inference???
         self.finallayer = Dense(units=targetVocabSize)
+        # self.finallayer = Dense(units=targetVocabSize, activation='softmax')
 
     def call(self, inputs):
+        """
+        Note: during training (i.e. when we have both source and target), if
+              the vectorized source and target sentences tensors have shape
+              (n_sentences, length) (guess: the length must be the same between
+              the two, thanks to padding), then the output of the whole
+              trasformer is a tensor of shape (n_sentences, length,
+              targetVocabSize), i.e. for each token in each sentence there's a
+              number of logits equal to the size of the target vocabulary.
+        """
         # Unpack the input into source and target.
         (source, target) = inputs
 

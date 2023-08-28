@@ -23,6 +23,9 @@ print(f'[INFO] splitting the dataset into train, val and test...')
 
 (train, val, test) = splitting_dataset(source=source, target=target)
 
+# TEST
+train = (train[0][:5], train[1][:5])
+
 # Source text processing (adapted on the training set).
 print(f'[INFO] adapting the source text processor on the source dataset...')
 
@@ -104,6 +107,23 @@ transformerModel.compile(
 # Train the model on the training dataset.
 transformerModel.fit(
     trainDs,
-    epochs=1,  # config.EPOCHS,
+    epochs=config.EPOCHS,
     validation_data=valDs
+)
+
+# Instantiate a Translator object containing the trained transformer model so
+# we can then serialize it to reload it  later to translate new sentences (i.e.
+# perform inference).
+translator = Translator(
+    sourceTextProcessor=sourceTextProcessor,
+    targetTextProcessor=targetTextProcessor,
+    transformer=transformerModel,
+    maxLength=50
+)
+
+print('[INFO] serialize the inference translator to disk...')
+
+tf.saved_model.save(
+    obj=translator,
+    export_dir='models'
 )

@@ -21,9 +21,9 @@ class Translator(tf.Module):
         maxLength
     ):
         """
-        sourceTextProcessor : ?
+        sourceTextProcessor : tf.keras.layers.TextVectorization
             Processor (vectorizer?) for the source text.
-        targetTextProcessor : ?
+        targetTextProcessor : tf.keras.layers.TextVectorization
             Processor (vectorizer?) for the target text.
         transformer : transformer.Transformer
             Trained transformer model.
@@ -61,7 +61,7 @@ class Translator(tf.Module):
 
         # Join the resulting strings into sentences.
         resultText = tf.strings.reduce_join(
-            input=resultTextTokens,
+            inputs=resultTextTokens,
             axis=1,
             separator=' '
         )
@@ -95,7 +95,8 @@ class Translator(tf.Module):
         text : tf.Tensor (dtype: tf.string) (guess)
             The predicted sentence in the target language.
         """
-        # Vectorize the source sentence.
+        # Vectorize the source sentence. If vectorized sentence has length L,
+        # the output of this operation has shape (1, L).
         sentence = self.sourceTextProcessor(sentence[tf.newaxis])
 
         encoderInput = sentence
@@ -103,7 +104,7 @@ class Translator(tf.Module):
         # Initialize the target sentence: when called on an empty sentence the
         # targetTextProcessor inserts only the start and end tokens.
         # Note: the final 0 index is for the only batch.
-        startEnd = self.targetTextProcessor([''])[0]
+        startEnd = self.targetTextProcessor([""])[0]
 
         # Take the start and end tokens in the initialized target sentence
         # individually.
@@ -120,27 +121,43 @@ class Translator(tf.Module):
         # Perform up to `maxLength` iterations to generate the output token
         # IDs.
         for i in tf.range(self.maxLength):
-            # Transpose the output array stack (?).
+            # The `stack` method of a `TensorArray` returns the value it
+            # contains as a tensor (the values must all have the same shape).
             output = tf.transpose(outputArray.stack())
 
             # Generate predictions. The transformer is passed the source
             # sentence, but also its own output, iteration after iteration. The
             # prediction for each token is a collection of predicted
             # probabilities over the target vocabulary (with one-hot encoding).
-            # Note: the `predictions` tensor has
-            #       (batch_size, ?, vocabulary_size).
+            # Note: the `predictions` tensor has shape
+            #       (batch_size, length, vocabulary_size),
+            #       where `length` is the lenght of the sentence.
             predictions = self.transformer(
                 [encoderInput, output],
                 training=False
             )
+
+            # This select the last token of each sentence. In particular:
+            #   * First dimention: all sentences are selecte (:).
+            #   * Second dimension: last token of each sentence is selected
+            #     (-1).
+            #   * Third dimension: all components of the embedding vectors are
+            #     selected (:).
             predictions = predictions[:, -1, :]
+
+            # Apply the softmax function along the last dimension.
+            # Note: the was NOT in the original code, but without this the
+            #       argmax is computed without any softmax having been applied!
+            probabilities = tf.math.softmax(predictions, axis=-1)
 
             # Extract the predicted token ID in the target language by taking
             # the argmax of the probabilities for each predicted token.
-            predictedId = tf.argmax(predictions, axis=-1)
+            # predictedId = tf.argmax(predictions, axis=-1)  # Original line.
+            predictedId = tf.argmax(probabilities, axis=-1)
 
             # Write the predicted token ID to the output array.
-            outputArray = outputArray.write(i+1, predictedId[0])
+            # outputArray = outputArray.write(i+1, predictedId[0])  # Orgiginal line.
+            outputArray = outputArray.write(i+1, predictedId)
 
             # If the model predicts the end token, the sentence is over and we
             # exit from the loop.

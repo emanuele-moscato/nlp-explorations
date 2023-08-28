@@ -1,3 +1,4 @@
 **.ipynb_checkpoints/
 **__pycache__
 pyimagesearch_transformers/data/**
+pyimagesearch_transformers/models/**
