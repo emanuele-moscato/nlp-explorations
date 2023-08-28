@@ -1,13 +1,13 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Dropout, Layer
 # Use these imports when working from a script.
-# from .attention import CausalSelfAttention, CrossAttention
-# from .feed_forward import FeedForward
-# from .positional_encoding import PositionalEmbedding
+from .attention import CausalSelfAttention, CrossAttention
+from .feed_forward import FeedForward
+from .positional_encoding import PositionalEmbedding
 # Use these imports when working from a notebook in the notebooks/ directory.
-from attention import CausalSelfAttention, CrossAttention
-from feed_forward import FeedForward
-from positional_encoding import PositionalEmbedding
+# from attention import CausalSelfAttention, CrossAttention
+# from feed_forward import FeedForward
+# from positional_encoding import PositionalEmbedding
 
 
 class DecoderLayer(Layer):

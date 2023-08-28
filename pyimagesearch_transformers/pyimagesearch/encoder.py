@@ -1,14 +1,14 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Dropout, Layer
 # Note: relative imports for running with scripts.
-# from .attention import GlobalSelfAttention
-# from .feed_forward import FeedForward
-# from .positional_encoding import PositionalEmbedding
+from .attention import GlobalSelfAttention
+from .feed_forward import FeedForward
+from .positional_encoding import PositionalEmbedding
 
 # Imports for running via a notebook in the notebooks/ directory.
-from attention import GlobalSelfAttention
-from feed_forward import FeedForward
-from positional_encoding import PositionalEmbedding
+# from attention import GlobalSelfAttention
+# from feed_forward import FeedForward
+# from positional_encoding import PositionalEmbedding
 
 
 class EncoderLayer(Layer):

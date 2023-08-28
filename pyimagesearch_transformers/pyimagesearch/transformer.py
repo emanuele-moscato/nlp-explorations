@@ -3,11 +3,11 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.metrics import Mean
 # Use these imports when working from a script.
-# from .decoder import Decoder
-# from .encoder import Encoder
+from .decoder import Decoder
+from .encoder import Encoder
 # Use these imports when working from a notebook in the notebooks/ directory.
-from decoder import Decoder
-from encoder import Encoder
+# from decoder import Decoder
+# from encoder import Encoder
 
 
 

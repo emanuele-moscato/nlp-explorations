@@ -1,5 +1,5 @@
-# Dataset filename.
-DATA_FNAME = "fra.txt"
+# Dataset filename (relative path from pyimagesearch_transformer/ directory).
+DATA_FNAME = "./data/fra.txt"
 
 # Batch size for training.
 BATCH_SIZE = 512

@@ -17,7 +17,8 @@ def load_data(fname):
 
         # Each line is a pair of tab-separated sentences, the first in one
         # language and the second in the other one.
-        pairs = [line.split('\t')[:-1] for line in lines]
+        # pairs = [line.split('\t')[:-1] for line in lines]  # Original code.
+        pairs = [line.split('\t') for line in lines]
 
         # Random shuffling of the pairs to forget about the initial ordering.
         random.shuffle(pairs)
