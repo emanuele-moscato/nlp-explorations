@@ -1,8 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Layer, Dense
+from tensorflow.keras.layers import Layer, Dense, LayerNormalization
 from utils import (scaled_dot_product_attention,
     masked_scaled_dot_product_attention)
-from encoder import FeedForward
+from encoder import FeedForward, Embeddings
 
 
 class MaskedAttentionHead(Layer):
@@ -197,13 +197,18 @@ class EncoderDecoderMultiHeadAttention(Layer):
 
 class TransformerDecoderLayer(Layer):
     """
+    Implementation of a transformer decoder layer. The full transformer will
+    comprise a stack (sequence) of these layers.
     """
     def __init__(self, config):
         """
-        TO DO: initialize layer normalizations.
+        Initializes inner layers.
         """
         super().__init__()
 
+        self.layer_norm_1 = LayerNormalization()
+        self.layer_norm_2 = LayerNormalization()
+        self.layer_norm_3 = LayerNormalization()
         self.masked_attention = MaskedMultiHeadAttention(config=config)
         self.encoder_decoder_attention = EncoderDecoderMultiHeadAttention(
             config=config)
@@ -211,10 +216,97 @@ class TransformerDecoderLayer(Layer):
 
     def call(self, x, encoder_k, encoder_v):
         """
-        TO DO: introduce layer normalizations and skip connections (where?).
+        Forward pass. The specific architecture (how many layer normalization
+        and skip connections steps are there and where) is taken from:
+            https://pyimagesearch.com/2022/09/05/a-deep-dive-into-transformers-with-tensorflow-and-keras-part-1/
         """
-        x = self.masked_attention(x)
+        # Masked multi-head attention with a skip connection "around it".
+        x = x + self.masked_attention(x)
 
-        x = self.encoder_decoder_attention(x, encoder_k, encoder_v)
+        # Layer normalization.
+        x = self.layer_norm_1(x)
+
+        # Encoder-decoder multi-head attention with a skip connection "around
+        # it".
+        x = x + self.encoder_decoder_attention(x, encoder_k, encoder_v)
+
+        # Layer normalization.
+        x = self.layer_norm_2(x)
+
+        # FNN layer with a skip connection around it.
+        x = x + self.feed_forward(x)
+
+        # Layer normalization.
+        x = self.layer_norm_3(x)
+
+        return x
+
+
+class TransformerDecoder(Layer):
+    """
+    Class instantiating a full transformer decoder object as a Keras `Layer`.
+    """
+    def __init__(self, config):
+        """
+        Initializes the two parts a full transformer decoder is made of:
+          1. An embedding layer that produces the hidden state (token +
+             positional embeddings) given the input token IDs.
+          2. A stack (sequence) of `TransformerDecoderLayer` objects,
+             traversed one after the other.
+        """
+        super().__init__()
+
+        # Instantiate the embeddings layer.
+        self.embeddings = Embeddings(config)
+
+        # Instantiate the stack of encoder layers.
+        self.layers = [
+            TransformerDecoderLayer(config=config)
+            for _ in range(config.num_hidden_layers)
+        ]
+
+    def call(self, input_ids, encoder_k, encoder_v):
+        """
+        Forward pass of the decoder. Steps:
+          1. Embeddings are computed.
+          2. Data goes through the stack of `TransformerDecoderLayer` layers.
+
+        Parameters
+        ----------
+        input_ids : tf.Tensor
+            Tensor of shape (batch_size, decoder_seq_len) containing the
+            numerical encodings (IDs) of the tokens in the input sequences of
+            the decoder.
+        encoder_k : tf.Tensor
+            Tensor of shape (batch_size, encoder_seq_len, encoder_hidden_dim)
+            representing the key vectors coming from the encoder. The batch
+            size needs to be the same as that of the decoder's input but the
+            hidden dimension could in principle be different as the Dense
+            layers projecting the tensors into the head dimension can take that
+            into account.
+        encoder_v : tf.Tensor
+            Tensor of shape (batch_size, encoder_seq_len, encoder_hidden_dim)
+            representing the value vectors coming from the encoder. The batch
+            size needs to be the same as that of the decoder's input but the
+            hidden dimension could in principle be different as the Dense
+            layers projecting the tensors into the head dimension can take that
+            into account.
+
+        Returns
+        -------
+        x : tf.Tensor
+            Tensor of shape (batch_size, decoder_seq_len, encoder_hidden_dim)
+            representing the linear combination of the value vectors coming
+            from the encoder with weights given by the weights computed in the
+            encoder-decoder attention part (multiple times, once for each
+            TransformerDecoderLayer in the stack).
+        """
+        # Compute the numerical embeddings of the input.
+        x = self.embeddings(input_ids)
+
+        # Act with all the encoder layers in the stack
+        # sequentially.
+        for layer in self.layers:
+            x = layer(x, encoder_k, encoder_v)
 
         return x
