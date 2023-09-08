@@ -65,7 +65,7 @@ def masked_scaled_dot_product_attention(
     )
 
     # Apply the mask.
-    scores = np.where(mask == 1, - mask * np.infty, scores)
+    scores = tf.where(mask == 1, - mask * np.infty, scores)
 
     # Compute the attention weights.
     weights = tf.math.softmax(

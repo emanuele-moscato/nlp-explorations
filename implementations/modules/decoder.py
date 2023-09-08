@@ -265,7 +265,7 @@ class TransformerDecoder(Layer):
             for _ in range(config.num_hidden_layers)
         ]
 
-    def call(self, input_ids, encoder_k, encoder_v):
+    def call(self, inputs):
         """
         Forward pass of the decoder. Steps:
           1. Embeddings are computed.
@@ -301,6 +301,9 @@ class TransformerDecoder(Layer):
             encoder-decoder attention part (multiple times, once for each
             TransformerDecoderLayer in the stack).
         """
+        # Unpack the `inputs` list.
+        input_ids, encoder_k, encoder_v = inputs
+
         # Compute the numerical embeddings of the input.
         x = self.embeddings(input_ids)
 
