@@ -287,7 +287,7 @@ class TransformerEncoder(Layer):
     def call(self, x):
         """
         Forward pass of the encoder. First, embeddings are computed,
-        then the stack of TransfomerEncoderLayer layers acts on the
+        then the stack of TransformerEncoderLayer layers acts on the
         embeddings.
         """
         # Compute the numerical embeddings of the input.
