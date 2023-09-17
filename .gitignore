@@ -3,3 +3,5 @@
 **DS_Store
 pyimagesearch_transformers/data/**
 pyimagesearch_transformers/models/**
+pyimagesearch_rnn/data/**
+pyimagesearch_rnn/output/**
