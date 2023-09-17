@@ -40,3 +40,37 @@ def get_rnn_model(vocabSize):
     model = keras.Model(inputs=inputs, outputs=outputs, name='RNN')
 
     return model
+
+
+def get_lstm_model(vocabSize):
+    """
+    Returns a Keras `Model` object implementing an LSTM neural network with
+    a classifier head.
+    """
+    # `Input` object (placeholder for the input tensor to build the model).
+    inputs = keras.Input(shape=(None,), dtype='int32')
+
+    # Token embedding and dropout regularization.
+    x = layers.Embedding(vocabSize, 128, mask_zero=True)(inputs)
+    x = layers.Dropout(0.2)(x)
+
+    # Stack (sequence) of LSTM layers.
+    x = layers.LSTM(64, return_sequences=True)(x)
+    x = layers.LSTM(64, return_sequences=True)(x)
+    x = layers.LSTM(64)(x)
+
+    # Add a classifier head (fully-connected NN) with dropout regularization.
+    x = layers.Dense(units=64, activation='relu')(x)
+    x = layers.Dense(units=32, activation='relu')(x)
+    x = layers.Dropout(0.2)(x)
+
+    # Output layer with sigmoid activation for binary classification.
+    outputs = layers.Dense(1, activation='sigmoid')(x)
+
+    model = keras.Model(
+        inputs=inputs,
+        outputs=outputs,
+        name='LSTM'
+    )
+
+    return model

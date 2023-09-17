@@ -17,15 +17,15 @@ modelRNN.compile(
     loss=keras.losses.BinaryCrossentropy(from_logits=False)
 )
 
-# print('[INFO] Loading the pre-trained LSTM model...')
+print('[INFO] Loading the pre-trained LSTM model...')
 
-# modelLSTM = keras.models.load_model(filepath=config.LSTM_MODEL_PATH)
+modelLSTM = keras.models.load_model(filepath=config.LSTM_MODEL_PATH)
 
-# modelLSTM.compile(
-#     optimizer='adam',
-#     metrics=['accuracy'],
-#     loss=keras.losses.BinaryCrossentropy(from_logits=False)
-# )
+modelLSTM.compile(
+    optimizer='adam',
+    metrics=['accuracy'],
+    loss=keras.losses.BinaryCrossentropy(from_logits=False)
+)
 
 # Load the IMDB Reviews test dataset.
 print('[INFO] Getting the IMDB test dataset...')
@@ -49,10 +49,18 @@ vectorizeLayer = load_vectorizer(
 # Vectorize the test dataset.
 testDs = testDs.map(lambda text, label: (vectorizeLayer(text), label))
 
-# Evaluate the trained models.
+# Evaluate the RNN model.
 print('[INFO] Test evaluation for the RNN model:')
 
 testLoss, testAccuracy = modelRNN.evaluate(testDs)
+
+print(f'\n[INFO] test loss: {testLoss:0.2f}')
+print(f'\n[INFO] test accuracy: {testAccuracy * 100:0.2f}%')
+
+# Evaluate the LSTm model.
+print('[INFO] Test evaluation for the LSTM model:')
+
+testLoss, testAccuracy = modelLSTM.evaluate(testDs)
 
 print(f'\n[INFO] test loss: {testLoss:0.2f}')
 print(f'\n[INFO] test accuracy: {testAccuracy * 100:0.2f}%')

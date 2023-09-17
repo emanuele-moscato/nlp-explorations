@@ -5,7 +5,7 @@ from pyimagesearch.plot import plot_loss_accuracy
 from pyimagesearch.save_load import save_vectorizer
 from pyimagesearch.dataset import get_imdb_dataset
 from pyimagesearch.model import get_rnn_model
-# from pyimagesearch.model import get_lstm_model
+from pyimagesearch.model import get_lstm_model
 from pyimagesearch import config
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -56,10 +56,30 @@ modelRNN.compile(
     loss=keras.losses.BinaryCrossentropy(from_logits=False)
 )
 
+# Instantiate the LSTM model and compile it.
+print('[INFO] Building the LSTM model...')
+
+modelLSTM = get_lstm_model(vocabSize=config.VOCAB_SIZE)
+
+modelLSTM.compile(
+    metrics=['accuracy'],
+    optimizer=keras.optimizers.Adam(learning_rate=config.LR),
+    loss=keras.losses.BinaryCrossentropy(from_logits=False)
+)
+
 # Train the RNN model.
 print('[INFO] Training the RNN model...')
 
 historyRNN = modelRNN.fit(
+    trainDs,
+    epochs=config.EPOCHS,
+    validation_data=valDs
+)
+
+# Train the LSTM model.
+print('[INFO] Training the LSTM model...')
+
+historyLSTM = modelLSTM.fit(
     trainDs,
     epochs=config.EPOCHS,
     validation_data=valDs
@@ -72,7 +92,7 @@ if not os.path.exists(config.OUTPUT_PATH):
 
 # Save the loss and accuracy plots.
 plot_loss_accuracy(history=historyRNN.history, filepath=config.RNN_PLOT)
-# plot_loss_accuracy(history=historyLSTM.history, filepath=config.LSTM_PLOT)
+plot_loss_accuracy(history=historyLSTM.history, filepath=config.LSTM_PLOT)
 
 # Save the trained models to disk.
 print(f'[INFO] Saving the RNN model to {config.RNN_MODEL_PATH}...')
@@ -83,13 +103,13 @@ keras.models.save_model(
     include_optimizer=False
 )
 
-# print(f'[INFO] Saving the LSTM model to {config.LSTM_MODEL_PATH}...')
+print(f'[INFO] Saving the LSTM model to {config.LSTM_MODEL_PATH}...')
 
-# keras.models.save_model(
-#     model=modelLSTM,
-#     filepath=config.LSTM_MODEL_PATH,
-#     include_optimizer=False
-# )
+keras.models.save_model(
+    model=modelLSTM,
+    filepath=config.LSTM_MODEL_PATH,
+    include_optimizer=False
+)
 
 # Save the text vectorization layer to disk.
 save_vectorizer(vectorizer=vectorizeLayer, name=config.TEXT_VEC_PATH)
